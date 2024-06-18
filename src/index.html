@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Hash- und Verschlüsselungsgenerator</title>
+</head>
+<body>
+<h2>Hash und Verschlüsselungsgenerator</h2>
+
+<div>
+    <h3>Verschlüsselung</h3>
+    <!-- Eingabefelder für den zu verschlüsselnden Text und den geheimen Schlüssel -->
+    <label for="inputString">Eingabetext:</label><input type="text" id="inputString" value="">
+    <label for="secretKey">Geheimer Schlüssel:</label><input type="text" id="secretKey" value="">
+    <!-- Button zum Starten der Verschlüsselung -->
+    <button onclick="generateHashAndEncryption()">Generieren</button>
+</div>
+
+<div>
+    <h3>Entschlüsselung</h3>
+    <!-- Eingabefelder für den verschlüsselten Text und den Initialisierungsvektor (IV) -->
+    <label for="encryptedInput">Verschlüsselter Text:</label><textarea id="encryptedInput"></textarea>
+    <label for="ivInput">Initialisierungsvektor (IV):</label><textarea id="ivInput"></textarea>
+    <!-- Button zum Starten der Entschlüsselung -->
+    <button onclick="decryptText()">Entschlüsseln</button>
+</div>
+
+<!-- Tabelle zur Anzeige der Ergebnisse -->
+<table style="margin-top: 20px;">
+    <tr>
+        <td><strong>AES Verschlüsselung:</strong></td>
+        <td id="encryptionOutput"></td>
+    </tr>
+    <tr>
+        <td><strong>SHA-256 Hash:</strong></td>
+        <td id="hashOutput"></td>
+    </tr>
+    <tr>
+        <td><strong>Entschlüsselter Text:</strong></td>
+        <td id="decryptionOutput"></td>
+    </tr>
+</table>
+
+<!-- Einbinden der externen JavaScript-Dateien -->
+<script src="mySHA256.js"></script>
+<script src="myAES.js"></script>
+<script>
+    // Funktion zum Generieren des Hash's und der Verschlüsselung
+    async function generateHashAndEncryption() {
+        try {
+            // Holen der Eingabewerte
+            const input = document.getElementById('inputString').value;
+            const secretKey = document.getElementById('secretKey').value;
+
+            // Parallelisierung der Hash- und Verschlüsselungsfunktionen
+            const [encrypted, hash] = await Promise.all([
+                myAES(input, secretKey),
+                mySHA256(input)
+            ]);
+
+            // Anzeigen der Ergebnisse
+            document.getElementById('encryptionOutput').innerText = JSON.stringify(encrypted);
+            document.getElementById('hashOutput').innerText = hash;
+        } catch (error) {
+            // Fehlerbehandlung
+            console.error(error);
+            alert('Ein Fehler ist aufgetreten: ' + error.message);
+        }
+    }
+
+    // Funktion zum Entschlüsseln des Textes
+    async function decryptText() {
+        try {
+            // Holen der Eingabewerte
+            const encryptedText = document.getElementById('encryptedInput').value;
+            const ivInput = document.getElementById('ivInput').value;
+            const secretKey = document.getElementById('secretKey').value;
+
+            // Erstellen des verschlüsselten Objekts
+            const encryptedObject = {
+                ciphertext: encryptedText,
+                iv: ivInput
+            };
+
+            // Anzeigen des entschlüsselten Textes
+            document.getElementById('decryptionOutput').innerText = await myAESDecrypt(encryptedObject.ciphertext, secretKey, encryptedObject.iv);
+        } catch (error) {
+            // Fehlerbehandlung
+            console.error(error);
+            alert('Ein Fehler ist aufgetreten: ' + error.message);
+        }
+    }
+</script>
+
+</body>
+</html>
